@@ -118,25 +118,27 @@
         --background: 0 0% 94%;
         --foreground: 0 0% 10%;
         --window-bg: 0 0% 100%;
-        --window-border: 0 0% 85%;
+        --window-border: 0 0% 70%;
         --titlebar-bg: 0 0% 97%;
         --dock-bg: 0 0% 100%;
         --menubar-bg: 0 0% 97%;
-        --primary: 0 0% 20%;
+        --primary: 0 0% 15%;
         --primary-foreground: 0 0% 100%;
-        --primary-glow: 0 0% 40%;
-        --muted-foreground: 0 0% 50%;
-        --accent: 0 0% 92%;
-        --accent-hover: 0 0% 88%;
+        --primary-glow: 0 0% 35%;
+        --muted-foreground: 0 0% 40%;
+        --accent: 0 0% 88%;
+        --accent-hover: 0 0% 82%;
         --quick-settings-bg: 0 0% 100%;
-        --quick-settings-item-bg: 0 0% 95%;
-        --gradient-accent: linear-gradient(135deg, hsl(0 0% 30%), hsl(0 0% 50%));
-        --shadow-color: 0 0% 70%;
-        --destructive: 0 84% 60%;
-        --border: 0 0% 85%;
-        --input: 0 0% 96%;
-        --secondary: 0 0% 96%;
+        --quick-settings-item-bg: 0 0% 92%;
+        --gradient-accent: linear-gradient(135deg, hsl(0 0% 25%), hsl(0 0% 45%));
+        --shadow-color: 0 0% 60%;
+        --destructive: 0 84% 55%;
+        --border: 0 0% 75%;
+        --input: 0 0% 94%;
+        --secondary: 0 0% 94%;
         --secondary-foreground: 0 0% 10%;
+        --slider-track: 0 0% 75%;
+        --slider-fill: 0 0% 25%;
       }
 
       /* M OS Dark Theme - MONOCHROME */
@@ -162,6 +164,8 @@
         --input: 0 0% 14%;
         --secondary: 0 0% 14%;
         --secondary-foreground: 0 0% 95%;
+        --slider-track: 0 0% 25%;
+        --slider-fill: 0 0% 80%;
       }
       
       /* M Logo - Premium styling with theme inversion */
@@ -1408,7 +1412,7 @@
       .volume-slider {
         flex: 1;
         height: 6px;
-        background: hsl(var(--accent));
+        background: hsl(var(--slider-track));
         border-radius: 3px;
         position: relative;
         cursor: pointer;
@@ -1427,11 +1431,11 @@
         left: 0;
         top: 0;
         height: 100%;
-        background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+        background: hsl(var(--slider-fill));
         border-radius: 3px;
         width: 60%;
         transition: width 0.15s ease;
-        box-shadow: 0 0 12px hsl(var(--primary) / 0.3);
+        box-shadow: 0 0 8px hsl(var(--slider-fill) / 0.3);
       }
       
       .volume-slider-thumb {
@@ -1439,23 +1443,24 @@
         right: 0;
         top: 50%;
         transform: translate(50%, -50%) scale(1);
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         background: hsl(var(--foreground));
         border-radius: 50%;
         box-shadow: 
-          0 2px 8px rgba(0,0,0,0.3),
-          0 0 0 3px hsl(var(--foreground) / 0.15);
+          0 2px 6px rgba(0,0,0,0.25),
+          0 0 0 2px hsl(var(--foreground) / 0.15);
         transition: 
           transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
           box-shadow 0.25s ease;
+        pointer-events: none;
       }
       
       .volume-slider:hover .volume-slider-thumb {
         transform: translate(50%, -50%) scale(1.15);
         box-shadow: 
           0 4px 12px rgba(0,0,0,0.35),
-          0 0 0 4px hsl(var(--foreground) / 0.2);
+          0 0 0 3px hsl(var(--foreground) / 0.2);
       }
       
       .volume-slider:active .volume-slider-thumb {
@@ -6183,10 +6188,10 @@
         font-size: 120px;
         font-weight: 200;
         color: white;
-        font-family: 'Space Grotesk', sans-serif;
-        letter-spacing: -3px;
+        font-family: var(--lockscreen-clock-font, 'Space Grotesk'), sans-serif;
+        letter-spacing: var(--lockscreen-clock-spacing, -3px);
         line-height: 1;
-        text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+        text-shadow: 0 4px 40px rgba(0, 0, 0, 0.7), 0 2px 10px rgba(0, 0, 0, 0.5), 0 0 80px rgba(0, 0, 0, 0.4);
         transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
       }
       
@@ -6201,7 +6206,33 @@
         color: rgba(255, 255, 255, 0.7);
         margin-top: 12px;
         font-weight: 300;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6), 0 1px 5px rgba(0, 0, 0, 0.4);
         transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      
+      /* Clock style variations */
+      .lockscreen-time.style-minimal {
+        font-weight: 100;
+        letter-spacing: -5px;
+      }
+      .lockscreen-time.style-bold {
+        font-weight: 700;
+        letter-spacing: 0px;
+      }
+      .lockscreen-time.style-outlined {
+        color: transparent;
+        -webkit-text-stroke: 2px white;
+      }
+      .lockscreen-time.style-retro {
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+        letter-spacing: 5px;
+        font-weight: 400;
+      }
+      .lockscreen-time.style-elegant {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-weight: 300;
+        font-style: italic;
+        letter-spacing: 2px;
       }
       
       /* Swipe up indicator - shown in initial view */
@@ -6787,7 +6818,9 @@
         wifiEnabled: localStorage.getItem('wifiEnabled') !== 'false',
         bluetoothEnabled: localStorage.getItem('bluetoothEnabled') === 'true',
         shareEnabled: localStorage.getItem('shareEnabled') === 'true',
-        focusEnabled: localStorage.getItem('focusEnabled') === 'true',
+        focusEnabled: false, // Always default to off on restart
+        // Volume level (0-100)
+        volume: parseInt(localStorage.getItem('mosVolume') || '60'),
         // Task Manager refresh interval
         taskManagerInterval: null,
         taskManagerWindowId: null,
@@ -6808,6 +6841,8 @@
           useDesktopWallpaper: true, // Use same wallpaper as desktop
           lockscreenEnabled: true, // Enable lockscreen on boot
           showSeconds: false, // Show seconds in time display
+          clockStyle: 'default', // Clock style: 'default', 'minimal', 'bold', 'outlined', 'retro', 'elegant'
+          clockFont: 'Space Grotesk', // Clock font family
         },
         // Notification toast position: 'top-center', 'top-left', 'top-right', 'bottom-center', 'bottom-left', 'bottom-right'
         notificationToastPosition: localStorage.getItem('notificationToastPosition') || 'top-center',
@@ -7031,9 +7066,94 @@
       
       // ============= LOCKSCREEN SETTINGS FUNCTIONS =============
       
-      // Save lockscreen settings to localStorage
+      // IndexedDB helper for settings storage
+      const settingsDB = {
+        dbName: 'MOSSettings',
+        storeName: 'settings',
+        _db: null,
+        
+        async open() {
+          if (this._db && this._db.objectStoreNames.contains(this.storeName)) {
+            return this._db;
+          }
+          
+          return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, 1);
+            request.onerror = (e) => reject(e.target.error);
+            request.onsuccess = (e) => {
+              this._db = e.target.result;
+              resolve(this._db);
+            };
+            request.onupgradeneeded = (e) => {
+              const db = e.target.result;
+              if (!db.objectStoreNames.contains(this.storeName)) {
+                db.createObjectStore(this.storeName, { keyPath: 'key' });
+              }
+            };
+          });
+        },
+        
+        async save(key, value) {
+          try {
+            const db = await this.open();
+            return new Promise((resolve, reject) => {
+              const tx = db.transaction(this.storeName, 'readwrite');
+              const store = tx.objectStore(this.storeName);
+              store.put({ key, value, timestamp: Date.now() });
+              tx.oncomplete = () => resolve();
+              tx.onerror = (e) => reject(e.target.error);
+            });
+          } catch (e) {
+            console.error('settingsDB save error:', e);
+          }
+        },
+        
+        async get(key) {
+          try {
+            const db = await this.open();
+            return new Promise((resolve, reject) => {
+              const tx = db.transaction(this.storeName, 'readonly');
+              const store = tx.objectStore(this.storeName);
+              const request = store.get(key);
+              request.onerror = (e) => reject(e.target.error);
+              request.onsuccess = () => resolve(request.result?.value || null);
+            });
+          } catch (e) {
+            console.error('settingsDB get error:', e);
+            return null;
+          }
+        }
+      };
+      
+      // Save lockscreen settings to both localStorage and IndexedDB
       function saveLockscreenSettings() {
-        localStorage.setItem('mos_lockscreen_settings', JSON.stringify(state.lockscreenSettings));
+        const settingsJson = JSON.stringify(state.lockscreenSettings);
+        localStorage.setItem('mos_lockscreen_settings', settingsJson);
+        settingsDB.save('lockscreenSettings', state.lockscreenSettings);
+      }
+      
+      // Load lockscreen settings from IndexedDB (with localStorage fallback)
+      async function loadLockscreenSettingsFromDB() {
+        try {
+          const dbSettings = await settingsDB.get('lockscreenSettings');
+          if (dbSettings) {
+            state.lockscreenSettings = {
+              useDesktopWallpaper: true,
+              lockscreenEnabled: true,
+              showSeconds: false,
+              clockStyle: 'default',
+              clockFont: 'Space Grotesk',
+              ...dbSettings
+            };
+            // Sync to localStorage
+            localStorage.setItem('mos_lockscreen_settings', JSON.stringify(state.lockscreenSettings));
+            console.log('Lockscreen settings loaded from IndexedDB:', state.lockscreenSettings);
+          }
+          // Apply clock style immediately to any existing lockscreen
+          applyLockscreenClockStyle();
+        } catch (e) {
+          console.error('Failed to load lockscreen settings from IndexedDB:', e);
+        }
       }
       
       // Helper to refresh settings content in-place without full render
@@ -7067,6 +7187,43 @@
         refreshSettingsContent();
         playSound('click');
       };
+      
+      // Set clock style for lockscreen
+      window.setLockscreenClockStyle = function(style) {
+        state.lockscreenSettings.clockStyle = style;
+        saveLockscreenSettings();
+        applyLockscreenClockStyle();
+        refreshSettingsContent();
+        playSound('click');
+      };
+      
+      // Set clock font for lockscreen
+      window.setLockscreenClockFont = function(font) {
+        state.lockscreenSettings.clockFont = font;
+        saveLockscreenSettings();
+        applyLockscreenClockStyle();
+        refreshSettingsContent();
+        playSound('click');
+      };
+      
+      // Apply clock style to lockscreen element
+      function applyLockscreenClockStyle() {
+        const timeEl = document.getElementById('lockscreen-time');
+        if (!timeEl) return;
+        
+        // Remove all style classes
+        timeEl.classList.remove('style-minimal', 'style-bold', 'style-outlined', 'style-retro', 'style-elegant');
+        
+        // Add current style class
+        const style = state.lockscreenSettings?.clockStyle || 'default';
+        if (style !== 'default') {
+          timeEl.classList.add('style-' + style);
+        }
+        
+        // Apply font
+        const font = state.lockscreenSettings?.clockFont || 'Space Grotesk';
+        timeEl.style.fontFamily = font + ', sans-serif';
+      }
       
       // Show change password dialog
       window.showChangePasswordDialog = function() {
@@ -7922,7 +8079,8 @@
           lockscreen.classList.add('active');
           state.isLocked = true;
           
-          // Update clock
+          // Apply clock style and update clock
+          applyLockscreenClockStyle();
           updateLockscreenClock();
           lockscreenClockInterval = setInterval(updateLockscreenClock, 1000);
           
@@ -8203,7 +8361,8 @@
           lockscreen.classList.add('active');
           state.isLocked = true;
           
-          // Update clock
+          // Apply clock style and update clock
+          applyLockscreenClockStyle();
           updateLockscreenClock();
           lockscreenClockInterval = setInterval(updateLockscreenClock, 1000);
         }
@@ -9459,10 +9618,33 @@
           window.showNotificationToast(notification);
         }
         
-        // Update notification panel if open, otherwise skip render
+        // Update notification panel if open - update DOM directly instead of full render to prevent animation replay
         const notifList = document.querySelector('.notification-list');
         if (notifList && state.showNotificationPanel) {
-          render();
+          // Update notification list directly without full render
+          const notificationHTML = notification.icon 
+            ? `<div class="notification-item" onclick="window.removeNotification(${notification.id})">
+                <div class="notification-icon"><img src="${notification.icon}" alt="" /></div>
+                <div class="notification-content">
+                  <div class="notification-app">${notification.app} <span class="notification-time">Just now</span></div>
+                  <div class="notification-title">${notification.title}</div>
+                  <div class="notification-body">${notification.message}</div>
+                </div>
+              </div>`
+            : `<div class="notification-item" onclick="window.removeNotification(${notification.id})">
+                <div class="notification-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                </div>
+                <div class="notification-content">
+                  <div class="notification-app">${notification.app} <span class="notification-time">Just now</span></div>
+                  <div class="notification-title">${notification.title}</div>
+                  <div class="notification-body">${notification.message}</div>
+                </div>
+              </div>`;
+          notifList.insertAdjacentHTML('afterbegin', notificationHTML);
         }
         
         return notification.id;
@@ -9578,7 +9760,38 @@
         state.notifications = [];
         state.notificationCount = 0;
         localStorage.setItem('mosNotifications', JSON.stringify([]));
-        render();
+        
+        // Update notification list directly without full render (like focus button)
+        const notificationList = document.querySelector('.notification-list');
+        if (notificationList) {
+          // Add fade-out animation to existing notifications
+          const existingItems = notificationList.querySelectorAll('.notification-item');
+          existingItems.forEach((item, index) => {
+            item.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+            item.style.transitionDelay = `${index * 0.03}s`;
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(20px)';
+          });
+          
+          // After animation, show empty state
+          setTimeout(() => {
+            notificationList.innerHTML = `
+              <div class="notification-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span>No notifications</span>
+              </div>
+            `;
+          }, existingItems.length > 0 ? 200 + (existingItems.length * 30) : 0);
+        }
+        
+        // Update notification badge in menubar
+        const notifBadge = document.querySelector('.menubar-notif-badge');
+        if (notifBadge) {
+          notifBadge.style.display = 'none';
+        }
       };
       
       window.changeCalendarMonth = function(delta) {
@@ -9655,7 +9868,7 @@
         state.focusEnabled = !state.focusEnabled;
         localStorage.setItem('focusEnabled', state.focusEnabled);
         
-        // Update focus button directly
+        // Update notification panel focus button directly
         const focusBtn = document.querySelector('.notification-footer-focus');
         if (focusBtn) {
           if (state.focusEnabled) {
@@ -9677,7 +9890,17 @@
           }
         }
         
-        // Add notification about focus mode change
+        // Also update quick settings focus button if visible
+        const qsFocusBtn = document.querySelector('.quick-settings-icon-btn[onclick*="toggleFocus"]');
+        if (qsFocusBtn) {
+          if (state.focusEnabled) {
+            qsFocusBtn.classList.add('active');
+          } else {
+            qsFocusBtn.classList.remove('active');
+          }
+        }
+        
+        // Add notification about focus mode change (with showToast=true for toast, but skip render)
         if (state.focusEnabled) {
           window.addNotification('System', 'Focus Mode', 'Focus mode enabled for ' + state.focusTimerMinutes + ' minutes');
         } else {
@@ -9745,6 +9968,8 @@
       window.toggleFocus = function() {
         state.focusEnabled = !state.focusEnabled;
         localStorage.setItem('focusEnabled', state.focusEnabled);
+        
+        // Update quick settings focus button directly
         const focusBtn = document.querySelector('.quick-settings-icon-btn[onclick*="toggleFocus"]');
         if (focusBtn) {
           if (state.focusEnabled) {
@@ -9753,6 +9978,96 @@
             focusBtn.classList.remove('active');
           }
         }
+        
+        // Also update notification panel focus button if visible
+        const notifFocusBtn = document.querySelector('.notification-footer-focus');
+        if (notifFocusBtn) {
+          if (state.focusEnabled) {
+            notifFocusBtn.classList.add('active');
+            notifFocusBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              Stop Focus
+            `;
+          } else {
+            notifFocusBtn.classList.remove('active');
+            notifFocusBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Focus
+            `;
+          }
+        }
+      };
+      
+      // ============= Volume Slider Functions =============
+      
+      window.setVolume = function(value) {
+        state.volume = Math.max(0, Math.min(100, Math.round(value)));
+        localStorage.setItem('mosVolume', state.volume);
+        updateVolumeSliderUI();
+      };
+      
+      function updateVolumeSliderUI() {
+        const slider = document.querySelector('.quick-settings .volume-slider');
+        if (!slider) return;
+        
+        const fill = slider.querySelector('.volume-slider-fill');
+        const thumb = slider.querySelector('.volume-slider-thumb');
+        const percentLabel = slider.parentElement.querySelector('span');
+        
+        if (fill) fill.style.width = state.volume + '%';
+        if (thumb) thumb.style.left = state.volume + '%';
+        if (percentLabel) percentLabel.textContent = state.volume + '%';
+        
+        // Update the volume icon
+        const volumeIcon = slider.parentElement.querySelector('svg');
+        if (volumeIcon) {
+          if (state.volume === 0) {
+            volumeIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+          } else if (state.volume <= 50) {
+            volumeIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+          } else {
+            volumeIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>';
+          }
+        }
+      }
+      
+      window.startVolumeSlide = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const slider = event.currentTarget;
+        const rect = slider.getBoundingClientRect();
+        
+        function updateVolume(clientX) {
+          const x = clientX - rect.left;
+          const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+          window.setVolume(percent);
+        }
+        
+        // Initial update
+        const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+        updateVolume(clientX);
+        
+        function onMove(e) {
+          const cx = e.touches ? e.touches[0].clientX : e.clientX;
+          updateVolume(cx);
+        }
+        
+        function onEnd() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onEnd);
+          document.removeEventListener('touchmove', onMove);
+          document.removeEventListener('touchend', onEnd);
+        }
+        
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
       };
       
       // ============= End Panel Functions =============
@@ -10602,7 +10917,7 @@
           }, 600);
         });
         
-        // Update Quick Settings button active state
+        // Update Quick Settings button active state, icon and label
         const qsThemeBtn = document.querySelector('.quick-settings-icon-btn .qs-theme-icon');
         if (qsThemeBtn) {
           const btn = qsThemeBtn.closest('.quick-settings-icon-btn');
@@ -10611,6 +10926,12 @@
               btn.classList.add('active');
             } else {
               btn.classList.remove('active');
+            }
+            // Update the icon inside qs-theme-icon (already handled by themeIcons loop above via .theme-toggle-icon)
+            // Update the label text
+            const labelSpan = btn.querySelector('span:not(.qs-theme-icon)');
+            if (labelSpan) {
+              labelSpan.textContent = state.isDark ? 'Dark' : 'Light';
             }
           }
         }
@@ -10628,10 +10949,22 @@
           }
         });
 
-        // Delay render to allow smooth CSS color transitions to complete first
-        setTimeout(() => {
-          render();
-        }, 350);
+        // Skip full render if quick settings or notification panel is open to prevent animation replay
+        // The DOM was already updated directly above, so we just need to update settings content if visible
+        if (state.showQuickSettings || state.showNotificationPanel) {
+          // Only refresh settings content if settings window is open
+          const settingsContent = document.querySelector('.settings-content');
+          if (settingsContent && state.settingsTab === 'appearance') {
+            setTimeout(() => {
+              refreshSettingsContent();
+            }, 350);
+          }
+        } else {
+          // Delay render to allow smooth CSS color transitions to complete first
+          setTimeout(() => {
+            render();
+          }, 350);
+        }
       };
       
       window.toggleQuickSettings = function toggleQuickSettings(event) {
@@ -11320,6 +11653,37 @@
             const lockEnabled = state.lockscreenSettings?.lockscreenEnabled !== false;
             const showSecs = state.lockscreenSettings?.showSeconds || false;
             const hasPass = !!localStorage.getItem('mos_password_hash');
+            const currentClockStyle = state.lockscreenSettings?.clockStyle || 'default';
+            const currentClockFont = state.lockscreenSettings?.clockFont || 'Space Grotesk';
+            
+            const clockStyles = [
+              { id: 'default', name: 'Default', desc: 'Clean and modern' },
+              { id: 'minimal', name: 'Minimal', desc: 'Ultra-thin weight' },
+              { id: 'bold', name: 'Bold', desc: 'Heavy and impactful' },
+              { id: 'outlined', name: 'Outlined', desc: 'Stroke only' },
+              { id: 'retro', name: 'Retro', desc: 'Monospace style' },
+              { id: 'elegant', name: 'Elegant', desc: 'Serif italic' },
+            ];
+            
+            const clockFonts = [
+              'Space Grotesk',
+              'JetBrains Mono',
+              'Georgia',
+              'Courier New',
+              'Arial',
+              'Helvetica',
+              'Times New Roman',
+              'Verdana',
+            ];
+            
+            // Get preview font and style classes for the preview
+            const previewFontFamily = currentClockFont + ', sans-serif';
+            const previewStyle = currentClockStyle === 'minimal' ? 'font-weight: 100; letter-spacing: -5px;' :
+                                 currentClockStyle === 'bold' ? 'font-weight: 700; letter-spacing: 0;' :
+                                 currentClockStyle === 'outlined' ? 'color: transparent; -webkit-text-stroke: 2px white;' :
+                                 currentClockStyle === 'retro' ? 'font-family: JetBrains Mono, Courier New, monospace; letter-spacing: 5px; font-weight: 400;' :
+                                 currentClockStyle === 'elegant' ? 'font-family: Georgia, Times New Roman, serif; font-weight: 300; font-style: italic; letter-spacing: 2px;' :
+                                 'font-weight: 200; letter-spacing: -3px;';
             
             return `
               <div class="settings-section" style="max-width: 700px; margin: 0 auto;">
@@ -11332,10 +11696,10 @@
                       <div style="position: absolute; inset: 0; background-image: url('${lockscreenWallpaper || state.customWallpaper}'); background-size: cover; background-position: center; filter: brightness(0.6);"></div>
                     ` : ''}
                     <div style="position: relative; z-index: 1; text-align: center;">
-                      <div style="font-size: 48px; font-weight: 200; color: white; font-family: 'Space Grotesk', sans-serif; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                      <div style="font-size: 48px; color: white; font-family: ${previewFontFamily}; text-shadow: 0 4px 40px rgba(0,0,0,0.7), 0 2px 10px rgba(0,0,0,0.5); ${previewStyle}">
                         ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                       </div>
-                      <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 4px;">
+                      <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 4px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
                         ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                       </div>
                     </div>
@@ -11389,7 +11753,63 @@
                   </div>
                 </div>
                 
-                <!-- Custom Lock Screen Wallpaper -->
+                <!-- Clock Style Settings -->
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: hsl(var(--foreground));">Clock Style</h3>
+                <div style="background: hsl(var(--accent) / 0.4); border-radius: 16px; padding: 20px; margin-bottom: 32px;">
+                  
+                  <!-- Clock Style Grid -->
+                  <div style="margin-bottom: 20px;">
+                    <div class="settings-label" style="margin-bottom: 12px;">Style</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                      ${clockStyles.map(style => `
+                        <button
+                          onclick="event.stopPropagation(); window.setLockscreenClockStyle('${style.id}')"
+                          style="
+                            padding: 12px 8px;
+                            background: ${currentClockStyle === style.id ? 'hsl(var(--primary))' : 'hsl(var(--accent))'};
+                            color: ${currentClockStyle === style.id ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))'};
+                            border: 2px solid ${currentClockStyle === style.id ? 'hsl(var(--primary))' : 'hsl(var(--border))'};
+                            border-radius: 10px;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            text-align: center;
+                          "
+                          onmouseover="if('${currentClockStyle}' !== '${style.id}') this.style.borderColor='hsl(var(--primary) / 0.5)';"
+                          onmouseout="if('${currentClockStyle}' !== '${style.id}') this.style.borderColor='hsl(var(--border))';"
+                        >
+                          <div style="font-size: 13px; font-weight: 600;">${style.name}</div>
+                          <div style="font-size: 10px; opacity: 0.7; margin-top: 2px;">${style.desc}</div>
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
+                  
+                  <!-- Clock Font Dropdown -->
+                  <div class="settings-item" style="padding: 16px 0; border-top: 1px solid hsl(var(--window-border) / 0.5);">
+                    <div>
+                      <div class="settings-label">Font Family</div>
+                      <div class="settings-description">Choose a font for the clock display</div>
+                    </div>
+                    <select 
+                      onchange="event.stopPropagation(); window.setLockscreenClockFont(this.value)"
+                      style="
+                        padding: 8px 12px;
+                        background: hsl(var(--accent));
+                        color: hsl(var(--foreground));
+                        border: 1px solid hsl(var(--border));
+                        border-radius: 8px;
+                        font-size: 13px;
+                        cursor: pointer;
+                        min-width: 150px;
+                      "
+                    >
+                      ${clockFonts.map(font => `
+                        <option value="${font}" ${currentClockFont === font ? 'selected' : ''} style="font-family: ${font}, sans-serif;">${font}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+                </div>
+                
                 <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: hsl(var(--foreground)); display: flex; justify-content: space-between; align-items: center;">
                   <span>Custom Lock Screen Wallpaper</span>
                   ${lockscreenWallpaper ? `
@@ -18096,20 +18516,18 @@
             ` : ''}
             
             <!-- Quick Settings Panel -->
-            <div class="quick-settings ${state.showQuickSettings ? 'active' : ''}" onclick="event.stopPropagation()">
+            <div class="quick-settings ${state.showQuickSettings ? 'active' : ''}${state.showQuickSettings && wasQuickSettingsOpen ? ' skip-animation' : ''}" onclick="event.stopPropagation()">
               <div class="quick-settings-volume">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="window.setVolume(0)" style="cursor: pointer;">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                  ${state.volume > 50 ? '<path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>' : ''}
+                  ${state.volume > 0 ? '<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>' : '<line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>'}
                 </svg>
-                <div class="volume-slider">
-                  <div class="volume-slider-fill"></div>
-                  <div class="volume-slider-thumb"></div>
+                <div class="volume-slider" onmousedown="window.startVolumeSlide(event)" ontouchstart="window.startVolumeSlide(event)">
+                  <div class="volume-slider-fill" style="width: ${state.volume}%;"></div>
+                  <div class="volume-slider-thumb" style="left: ${state.volume}%;"></div>
                 </div>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
+                <span style="font-size: 12px; min-width: 28px; text-align: right; color: hsl(var(--muted-foreground));">${state.volume}%</span>
               </div>
               
               <!-- Icon Grid - M OS Control Center -->
@@ -18173,7 +18591,7 @@
             </div>
             
             <!-- Notification Panel -->
-            <div class="notification-panel ${state.showNotificationPanel ? 'active' : ''}" onclick="event.stopPropagation()">
+            <div class="notification-panel ${state.showNotificationPanel ? 'active' : ''}${state.showNotificationPanel && wasNotificationPanelOpen ? ' skip-animation' : ''}" onclick="event.stopPropagation()">
               <!-- Clock & Date Section (Top) -->
               <div class="notification-clock-section">
                 <div class="notification-clock-main">
@@ -20567,7 +20985,7 @@
         apps = getApps();
       };
       
-      // Initialize app check
+      // Initialize app check (settings loaded at boot time now)
       checkInstalledApps();
 
       // Cache wallpaper images for offline use
@@ -22471,8 +22889,14 @@
         console.log('Init completed successfully');
         console.log('Split render system loaded with DOM diffing + vdom batching: render(), renderWindows(), renderShell(), vdom available');
         
-        // Start the OS boot sequence
-        startOS();
+        // Load settings from IndexedDB BEFORE starting OS boot
+        loadLockscreenSettingsFromDB().then(() => {
+          console.log('[Boot] Settings loaded, starting OS...');
+          startOS();
+        }).catch(e => {
+          console.error('Settings load error:', e);
+          startOS(); // Start anyway even if settings fail
+        });
       } catch (e) {
         console.error('Init error:', e);
       }
