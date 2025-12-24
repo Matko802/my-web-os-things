@@ -3,36 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Offline-compatible: No external font dependencies -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Nerd Fonts - JetBrainsMono -->
+    <link href="https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/Ligatures/Regular/JetBrainsMonoNerdFont-Regular.ttf" rel="preload" as="font" type="font/ttf" crossorigin>
     <style>
-      /* System font stack for offline compatibility */
-      /* Space Grotesk fallback to system fonts */
-      @font-face {
-        font-family: 'Space Grotesk';
-        src: local('Space Grotesk'), local('SF Pro Display'), local('Segoe UI'), local('Roboto');
-        font-weight: 300 700;
-        font-style: normal;
-        font-display: swap;
-      }
-      /* JetBrains Mono fallback to system monospace */
-      @font-face {
-        font-family: 'JetBrains Mono';
-        src: local('JetBrains Mono'), local('SF Mono'), local('Consolas'), local('Monaco');
-        font-weight: 400 500;
-        font-style: normal;
-        font-display: swap;
-      }
-      /* Nerd Font fallback */
       @font-face {
         font-family: 'JetBrainsMono Nerd Font';
-        src: local('JetBrainsMono Nerd Font'), local('JetBrains Mono'), local('SF Mono'), local('Consolas'), local('Monaco');
+        src: url('https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/Ligatures/Regular/JetBrainsMonoNerdFont-Regular.ttf') format('truetype');
         font-weight: 400;
         font-style: normal;
         font-display: swap;
       }
       @font-face {
         font-family: 'JetBrainsMono Nerd Font';
-        src: local('JetBrainsMono Nerd Font'), local('JetBrains Mono'), local('SF Mono'), local('Consolas'), local('Monaco');
+        src: url('https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/Ligatures/Bold/JetBrainsMonoNerdFont-Bold.ttf') format('truetype');
         font-weight: 700;
         font-style: normal;
         font-display: swap;
