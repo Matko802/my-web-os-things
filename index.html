@@ -6787,7 +6787,7 @@
         activeBookmarkIndex: null, // Track which bookmark is showing actions
         activeSiteIndex: null, // Track which saved site is showing actions
         showLaunchpad: false, // Track if launchpad is visible
-        accentColor: localStorage.getItem('accentColor') || '#007AFF', // macOS blue accent
+        accentColor: localStorage.getItem('accentColor') || '#E01B24', // Red accent
         iconPack: localStorage.getItem('iconPack') || 'classic', // Icon pack: classic, accent, monochrome, glass
         launchpadSearch: '', // Search query for launchpad
         windowStates: JSON.parse(localStorage.getItem('windowStates') || '{}'), // Track maximize state per appId
@@ -6841,6 +6841,7 @@
           useDesktopWallpaper: true, // Use same wallpaper as desktop
           lockscreenEnabled: true, // Enable lockscreen on boot
           showSeconds: false, // Show seconds in time display
+          use12Hour: false, // Use 12-hour format (AM/PM)
           clockStyle: 'default', // Clock style: 'default', 'minimal', 'bold', 'outlined', 'retro', 'elegant'
           clockFont: 'Space Grotesk', // Clock font family
         },
@@ -7141,6 +7142,7 @@
               useDesktopWallpaper: true,
               lockscreenEnabled: true,
               showSeconds: false,
+              use12Hour: false,
               clockStyle: 'default',
               clockFont: 'Space Grotesk',
               ...dbSettings
@@ -7155,6 +7157,34 @@
           console.error('Failed to load lockscreen settings from IndexedDB:', e);
         }
       }
+      
+      // Live clock interval for settings preview - runs globally
+      let settingsPreviewClockInterval = null;
+      
+      function updateSettingsPreviewClock() {
+        const previewClock = document.getElementById('lockscreen-preview-clock');
+        if (previewClock) {
+          const now = new Date();
+          const showSeconds = state.lockscreenSettings?.showSeconds;
+          const use12Hour = state.lockscreenSettings?.use12Hour;
+          previewClock.textContent = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: showSeconds ? '2-digit' : undefined,
+            hour12: use12Hour
+          });
+        }
+      }
+      
+      // Start global preview clock interval (runs once on load)
+      function initSettingsPreviewClock() {
+        if (!settingsPreviewClockInterval) {
+          settingsPreviewClockInterval = setInterval(updateSettingsPreviewClock, 1000);
+        }
+      }
+      
+      // Initialize the preview clock interval immediately
+      initSettingsPreviewClock();
       
       // Helper to refresh settings content in-place without full render
       function refreshSettingsContent() {
@@ -7183,6 +7213,14 @@
       // Toggle show seconds in lockscreen clock
       window.toggleLockscreenShowSeconds = function() {
         state.lockscreenSettings.showSeconds = !state.lockscreenSettings.showSeconds;
+        saveLockscreenSettings();
+        refreshSettingsContent();
+        playSound('click');
+      };
+      
+      // Toggle 12-hour format for lockscreen clock
+      window.toggleLockscreen12HourFormat = function() {
+        state.lockscreenSettings.use12Hour = !state.lockscreenSettings.use12Hour;
         saveLockscreenSettings();
         refreshSettingsContent();
         playSound('click');
@@ -7892,16 +7930,31 @@
         if (timeEl && dateEl) {
           const now = new Date();
           const showSeconds = state.lockscreenSettings?.showSeconds;
+          const use12Hour = state.lockscreenSettings?.use12Hour;
           timeEl.textContent = now.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: showSeconds ? '2-digit' : undefined,
-            hour12: false
+            hour12: use12Hour
           });
           dateEl.textContent = now.toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
             day: 'numeric'
+          });
+        }
+        
+        // Also update the settings preview clock if visible
+        const previewClock = document.getElementById('lockscreen-preview-clock');
+        if (previewClock) {
+          const now = new Date();
+          const showSeconds = state.lockscreenSettings?.showSeconds;
+          const use12Hour = state.lockscreenSettings?.use12Hour;
+          previewClock.textContent = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: showSeconds ? '2-digit' : undefined,
+            hour12: use12Hour
           });
         }
       }
@@ -10164,14 +10217,19 @@
         // Apply OS theme class - always macOS
         document.documentElement.classList.add('macos');
 
-        // Define built-in wallpapers with external URLs (macOS only)
+        // Define built-in wallpapers with external URLs (M OS custom wallpapers)
         const builtInWallpapers = {
-          '-2': { // Tahoe
+          '-2': { // Mpaper (default)
+            light: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20white.png',
+            dark: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20dark.png',
+            name: 'Mpaper'
+          },
+          '-3': { // Tahoe
             light: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Light-1080x1920.png',
             dark: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Dark-1080x1920.png',
             name: 'Tahoe'
           },
-          '-3': { // macOS Sonoma (default)
+          '-4': { // macOS Sonoma
             light: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-L.jpg',
             dark: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-D.jpg',
             name: 'Sonoma'
@@ -10180,7 +10238,12 @@
         
         // Set initial wallpaper based on theme
         const savedWallpaper = localStorage.getItem('customWallpaper');
-        const activeCustomIdx = parseInt(localStorage.getItem('activeCustomWallpaper') || '-2');
+        const storedActiveCustom = localStorage.getItem('activeCustomWallpaper');
+        let activeCustomIdx = parseInt(storedActiveCustom ?? '-2');
+        if (Number.isNaN(activeCustomIdx)) activeCustomIdx = -2;
+        
+        // Keep state in sync (used by toggleTheme)
+        state.activeCustomWallpaper = activeCustomIdx;
         
         if (activeCustomIdx >= 0 && state.customWallpapers[activeCustomIdx]) {
           // Use active custom wallpaper
@@ -10188,22 +10251,22 @@
           const wallpaperURL = state.isDark ? customWallpaper.dark : customWallpaper.light;
           state.customWallpaper = wallpaperURL;
         } else if (activeCustomIdx < 0 && builtInWallpapers[activeCustomIdx]) {
-          // Use built-in wallpaper from localStorage or URL
+          // Use built-in wallpaper (do NOT prefer savedWallpaper here; it can be stale)
           const wallpaper = builtInWallpapers[activeCustomIdx];
           const wallpaperURL = state.isDark ? wallpaper.dark : wallpaper.light;
-          state.customWallpaper = savedWallpaper || wallpaperURL;
-          if (!savedWallpaper) {
-            localStorage.setItem('customWallpaper', wallpaperURL);
+          state.customWallpaper = wallpaperURL;
+          localStorage.setItem('customWallpaper', wallpaperURL);
+          if (!storedActiveCustom) {
+            localStorage.setItem('activeCustomWallpaper', activeCustomIdx.toString());
           }
         } else {
-          // Default to Tahoe
-          const defaultIdx = '-2';
+          // Default to Mpaper
+          const defaultIdx = -2;
+          state.activeCustomWallpaper = defaultIdx;
           const wallpaperURL = state.isDark ? builtInWallpapers[defaultIdx].dark : builtInWallpapers[defaultIdx].light;
-          state.customWallpaper = savedWallpaper || wallpaperURL;
-          if (!savedWallpaper) {
-            localStorage.setItem('customWallpaper', wallpaperURL);
-            localStorage.setItem('activeCustomWallpaper', defaultIdx);
-          }
+          state.customWallpaper = wallpaperURL;
+          localStorage.setItem('customWallpaper', wallpaperURL);
+          localStorage.setItem('activeCustomWallpaper', defaultIdx.toString());
         }
 
         // Apply no-animations class if animations are disabled
@@ -10262,8 +10325,8 @@
           document.documentElement.style.setProperty('--ubuntu-orange', hslColor);
           document.documentElement.style.setProperty('--toggle-thumb-color', thumbColor);
         } else {
-          // Set default accent color - macOS blue
-          const defaultAccent = '#007AFF';
+          // Set default accent color - red
+          const defaultAccent = '#E01B24';
           state.accentColor = defaultAccent;
           localStorage.setItem('accentColor', defaultAccent);
           const hexToHSLDefault = (hex) => {
@@ -10858,11 +10921,15 @@
           localStorage.setItem('theme', 'dark');
           // Set wallpaper based on active custom or default
           const builtInWallpapers = {
-            '-2': { 
+            '-2': { // Mpaper (default)
+              light: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20white.png',
+              dark: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20dark.png'
+            },
+            '-3': { // Tahoe
               light: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Light-1080x1920.png',
               dark: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Dark-1080x1920.png'
             },
-            '-3': { 
+            '-4': { // Sonoma
               light: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-L.jpg',
               dark: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-D.jpg'
             },
@@ -10881,11 +10948,15 @@
           localStorage.setItem('theme', 'light');
           // Set wallpaper based on active custom or default
           const builtInWallpapers = {
-            '-2': { 
+            '-2': { // Mpaper (default)
+              light: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20white.png',
+              dark: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20dark.png'
+            },
+            '-3': { // Tahoe
               light: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Light-1080x1920.png',
               dark: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Dark-1080x1920.png'
             },
-            '-3': { 
+            '-4': { // Sonoma
               light: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-L.jpg',
               dark: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-D.jpg'
             },
@@ -11609,7 +11680,7 @@
                     }).join('')}
                     
                     
-                    <!-- Tahoe wallpaper -->
+                    <!-- Mpaper wallpaper (default) -->
                     <div 
                       class="wallpaper-thumbnail ${state.activeCustomWallpaper === -2 ? 'active' : ''}"
                       style="position: relative; aspect-ratio: 16/10; border-radius: 12px; overflow: hidden; cursor: pointer; border: 3px solid ${state.activeCustomWallpaper === -2 ? state.accentColor : 'transparent'}; transition: all 0.2s ease;"
@@ -11617,10 +11688,10 @@
                     >
                       <div style="position: absolute; inset: 0; display: flex;">
                         <div style="width: 50%; height: 100%; position: relative; overflow: hidden;">
-                          <img src="https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Light-1080x1920.png" style="position: absolute; left: 0; top: 0; width: 200%; height: 100%; object-fit: cover;" />
+                          <img src="https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20white.png" style="position: absolute; left: 0; top: 0; width: 200%; height: 100%; object-fit: cover;" />
                         </div>
                         <div style="width: 50%; height: 100%; position: relative; overflow: hidden;">
-                          <img src="https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Dark-1080x1920.png" style="position: absolute; left: -100%; top: 0; width: 200%; height: 100%; object-fit: cover;" />
+                          <img src="https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20dark.png" style="position: absolute; left: -100%; top: 0; width: 200%; height: 100%; object-fit: cover;" />
                         </div>
                       </div>
                       ${state.activeCustomWallpaper === -2 ? `
@@ -11652,6 +11723,7 @@
             const useDesktopWp = state.lockscreenSettings?.useDesktopWallpaper !== false;
             const lockEnabled = state.lockscreenSettings?.lockscreenEnabled !== false;
             const showSecs = state.lockscreenSettings?.showSeconds || false;
+            const use12Hr = state.lockscreenSettings?.use12Hour || false;
             const hasPass = !!localStorage.getItem('mos_password_hash');
             const currentClockStyle = state.lockscreenSettings?.clockStyle || 'default';
             const currentClockFont = state.lockscreenSettings?.clockFont || 'Space Grotesk';
@@ -11689,71 +11761,30 @@
               <div class="settings-section" style="max-width: 700px; margin: 0 auto;">
                 <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 24px; color: hsl(var(--foreground));">Lock Screen</h2>
                 
-                <!-- Lock Screen Preview -->
+                <!-- Lock Screen Preview - Landscape like actual lockscreen -->
                 <div style="background: hsl(var(--accent) / 0.4); border-radius: 16px; padding: 24px; margin-bottom: 32px;">
-                  <div style="position: relative; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <div style="position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #1a0a4e 0%, #3d1a7a 25%, #1a3a8a 50%, #0a2a6a 75%, #0a1a4a 100%); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; box-shadow: 0 10px 40px rgba(0,0,0,0.4);">
                     ${(lockscreenWallpaper || (useDesktopWp && state.customWallpaper)) ? `
-                      <div style="position: absolute; inset: 0; background-image: url('${lockscreenWallpaper || state.customWallpaper}'); background-size: cover; background-position: center; filter: brightness(0.6);"></div>
+                      <div style="position: absolute; inset: 0; background-image: url('${lockscreenWallpaper || state.customWallpaper}'); background-size: cover; background-position: center; filter: brightness(0.85);"></div>
                     ` : ''}
-                    <div style="position: relative; z-index: 1; text-align: center;">
-                      <div style="font-size: 48px; color: white; font-family: ${previewFontFamily}; text-shadow: 0 4px 40px rgba(0,0,0,0.7), 0 2px 10px rgba(0,0,0,0.5); ${previewStyle}">
-                        ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                    <!-- Clock and date - centered in upper third -->
+                    <div style="position: relative; z-index: 1; text-align: center; margin-top: 15%;">
+                      <div id="lockscreen-preview-clock" style="font-size: clamp(48px, 10vw, 80px); color: white; font-family: ${previewFontFamily}; text-shadow: 0 2px 20px rgba(0,0,0,0.5); line-height: 1; font-weight: 200; letter-spacing: 2px; ${previewStyle}">
+                        ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: showSecs ? '2-digit' : undefined, hour12: use12Hr })}
                       </div>
-                      <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 4px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                      <div style="font-size: clamp(12px, 2vw, 18px); color: rgba(255,255,255,0.85); margin-top: 8px; text-shadow: 0 1px 8px rgba(0,0,0,0.4); font-weight: 300; letter-spacing: 0.5px;">
                         ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                       </div>
                     </div>
-                    <div style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50); display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.5;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width: 16px; height: 16px;">
-                        <polyline points="18 15 12 9 6 15"></polyline>
-                      </svg>
-                      <span style="font-size: 10px; color: white;">Swipe up</span>
-                    </div>
-                  </div>
-                  <div style="margin-top: 12px; text-align: center; font-size: 12px; color: hsl(var(--muted-foreground));">
-                    Click the lock screen or swipe up to reveal unlock options
-                  </div>
-                </div>
-                
-                <!-- Lock Screen Settings -->
-                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: hsl(var(--foreground));">Settings</h3>
-                <div style="background: hsl(var(--accent) / 0.4); border-radius: 16px; padding: 20px; margin-bottom: 32px;">
-                  
-                  <!-- Enable Lock Screen on Boot -->
-                  <div class="settings-item" style="padding: 16px 0; border-bottom: 1px solid hsl(var(--window-border) / 0.5);">
-                    <div>
-                      <div class="settings-label">Show Lock Screen on Boot</div>
-                      <div class="settings-description">Display lock screen after starting M OS</div>
-                    </div>
-                    <div class="toggle-switch ${lockEnabled ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLockscreenEnabled();">
-                      <div class="toggle-switch-thumb"></div>
-                    </div>
-                  </div>
-                  
-                  <!-- Use Desktop Wallpaper -->
-                  <div class="settings-item" style="padding: 16px 0; border-bottom: 1px solid hsl(var(--window-border) / 0.5);">
-                    <div>
-                      <div class="settings-label">Use Desktop Wallpaper</div>
-                      <div class="settings-description">Use the same wallpaper as your desktop background</div>
-                    </div>
-                    <div class="toggle-switch ${useDesktopWp ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLockscreenUseDesktopWallpaper();">
-                      <div class="toggle-switch-thumb"></div>
-                    </div>
-                  </div>
-                  
-                  <!-- Show Seconds -->
-                  <div class="settings-item" style="padding: 16px 0;">
-                    <div>
-                      <div class="settings-label">Show Seconds in Clock</div>
-                      <div class="settings-description">Display seconds in the lock screen time</div>
-                    </div>
-                    <div class="toggle-switch ${showSecs ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLockscreenShowSeconds();">
-                      <div class="toggle-switch-thumb"></div>
+                    <!-- Swipe up indicator at bottom -->
+                    <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2;">
+                      <svg viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px; opacity: 0.6;"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+                      <div style="font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 300; letter-spacing: 0.3px;">Click or swipe up to unlock</div>
                     </div>
                   </div>
                 </div>
                 
-                <!-- Clock Style Settings -->
+                <!-- Clock Style Settings - MOVED UP -->
                 <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: hsl(var(--foreground));">Clock Style</h3>
                 <div style="background: hsl(var(--accent) / 0.4); border-radius: 16px; padding: 20px; margin-bottom: 32px;">
                   
@@ -11807,6 +11838,55 @@
                         <option value="${font}" ${currentClockFont === font ? 'selected' : ''} style="font-family: ${font}, sans-serif;">${font}</option>
                       `).join('')}
                     </select>
+                  </div>
+                </div>
+                
+                <!-- Lock Screen Settings - MOVED DOWN -->
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: hsl(var(--foreground));">Settings</h3>
+                <div style="background: hsl(var(--accent) / 0.4); border-radius: 16px; padding: 20px; margin-bottom: 32px;">
+                  
+                  <!-- Enable Lock Screen on Boot -->
+                  <div class="settings-item" style="padding: 16px 0; border-bottom: 1px solid hsl(var(--window-border) / 0.5);">
+                    <div>
+                      <div class="settings-label">Show Lock Screen on Boot</div>
+                      <div class="settings-description">Display lock screen after starting M OS</div>
+                    </div>
+                    <div class="toggle-switch ${lockEnabled ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLockscreenEnabled();">
+                      <div class="toggle-switch-thumb"></div>
+                    </div>
+                  </div>
+                  
+                  <!-- Use Desktop Wallpaper -->
+                  <div class="settings-item" style="padding: 16px 0; border-bottom: 1px solid hsl(var(--window-border) / 0.5);">
+                    <div>
+                      <div class="settings-label">Use Desktop Wallpaper</div>
+                      <div class="settings-description">Use the same wallpaper as your desktop background</div>
+                    </div>
+                    <div class="toggle-switch ${useDesktopWp ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLockscreenUseDesktopWallpaper();">
+                      <div class="toggle-switch-thumb"></div>
+                    </div>
+                  </div>
+                  
+                  <!-- Show Seconds -->
+                  <div class="settings-item" style="padding: 16px 0; border-bottom: 1px solid hsl(var(--window-border) / 0.5);">
+                    <div>
+                      <div class="settings-label">Show Seconds in Clock</div>
+                      <div class="settings-description">Display seconds in the lock screen time</div>
+                    </div>
+                    <div class="toggle-switch ${showSecs ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLockscreenShowSeconds();">
+                      <div class="toggle-switch-thumb"></div>
+                    </div>
+                  </div>
+                  
+                  <!-- 12-Hour Format -->
+                  <div class="settings-item" style="padding: 16px 0;">
+                    <div>
+                      <div class="settings-label">12-Hour Format</div>
+                      <div class="settings-description">Use 12-hour format with AM/PM instead of 24-hour</div>
+                    </div>
+                    <div class="toggle-switch ${use12Hr ? 'active' : ''}" onclick="event.stopPropagation(); window.toggleLockscreen12HourFormat();">
+                      <div class="toggle-switch-thumb"></div>
+                    </div>
                   </div>
                 </div>
                 
@@ -11994,12 +12074,36 @@
                     `;
                   }).join('')}
                   
-                  <!-- Tahoe wallpaper -->
+                  <!-- Mpaper wallpaper (default) -->
                   <div style="display: flex; flex-direction: column; gap: 6px;">
                     <div 
                       class="wallpaper-thumbnail ${state.activeCustomWallpaper === -2 ? 'active' : ''}"
                       style="position: relative; aspect-ratio: 16/10; border-radius: 12px; overflow: hidden; cursor: pointer; border: 3px solid ${state.activeCustomWallpaper === -2 ? 'hsl(var(--primary))' : 'transparent'}; transition: all 0.2s ease;"
                       onclick="event.stopPropagation(); window.setActiveWallpaper(-2)"
+                    >
+                      <div style="position: absolute; inset: 0; display: flex;">
+                        <div style="width: 50%; height: 100%; position: relative; overflow: hidden;">
+                          <img src="https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20white.png" style="position: absolute; left: 0; top: 0; width: 200%; height: 100%; object-fit: cover;" />
+                        </div>
+                        <div style="width: 50%; height: 100%; position: relative; overflow: hidden;">
+                          <img src="https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20dark.png" style="position: absolute; left: -100%; top: 0; width: 200%; height: 100%; object-fit: cover;" />
+                        </div>
+                      </div>
+                      ${state.activeCustomWallpaper === -2 ? `
+                        <div style="position: absolute; bottom: 6px; left: 6px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; z-index: 1;">
+                          ✓
+                        </div>
+                      ` : ''}
+                    </div>
+                    <div style="text-align: center; font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 500;">Mpaper</div>
+                  </div>
+                  
+                  <!-- Tahoe wallpaper -->
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div 
+                      class="wallpaper-thumbnail ${state.activeCustomWallpaper === -3 ? 'active' : ''}"
+                      style="position: relative; aspect-ratio: 16/10; border-radius: 12px; overflow: hidden; cursor: pointer; border: 3px solid ${state.activeCustomWallpaper === -3 ? 'hsl(var(--primary))' : 'transparent'}; transition: all 0.2s ease;"
+                      onclick="event.stopPropagation(); window.setActiveWallpaper(-3)"
                     >
                       <div style="position: absolute; inset: 0; display: flex;">
                         <div style="width: 50%; height: 100%; position: relative; overflow: hidden;">
@@ -12009,7 +12113,7 @@
                           <img src="https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Dark-1080x1920.png" style="position: absolute; left: -100%; top: 0; width: 200%; height: 100%; object-fit: cover;" />
                         </div>
                       </div>
-                      ${state.activeCustomWallpaper === -2 ? `
+                      ${state.activeCustomWallpaper === -3 ? `
                         <div style="position: absolute; bottom: 6px; left: 6px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; z-index: 1;">
                           ✓
                         </div>
@@ -12018,11 +12122,12 @@
                     <div style="text-align: center; font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 500;">Tahoe</div>
                   </div>
                   
+                  <!-- Sonoma wallpaper -->
                   <div style="display: flex; flex-direction: column; gap: 6px;">
                     <div 
-                      class="wallpaper-thumbnail ${state.activeCustomWallpaper === -3 ? 'active' : ''}"
-                      style="position: relative; aspect-ratio: 16/10; border-radius: 12px; overflow: hidden; cursor: pointer; border: 3px solid ${state.activeCustomWallpaper === -3 ? 'hsl(var(--primary))' : 'transparent'}; transition: all 0.2s ease;"
-                      onclick="event.stopPropagation(); window.setActiveWallpaper(-3)"
+                      class="wallpaper-thumbnail ${state.activeCustomWallpaper === -4 ? 'active' : ''}"
+                      style="position: relative; aspect-ratio: 16/10; border-radius: 12px; overflow: hidden; cursor: pointer; border: 3px solid ${state.activeCustomWallpaper === -4 ? 'hsl(var(--primary))' : 'transparent'}; transition: all 0.2s ease;"
+                      onclick="event.stopPropagation(); window.setActiveWallpaper(-4)"
                     >
                       <div style="position: absolute; inset: 0; display: flex;">
                         <div style="width: 50%; height: 100%; position: relative; overflow: hidden;">
@@ -12032,7 +12137,7 @@
                           <img src="https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-D.jpg" style="position: absolute; left: -100%; top: 0; width: 200%; height: 100%; object-fit: cover;" />
                         </div>
                       </div>
-                      ${state.activeCustomWallpaper === -3 ? `
+                      ${state.activeCustomWallpaper === -4 ? `
                         <div style="position: absolute; bottom: 6px; left: 6px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; z-index: 1;">
                           ✓
                         </div>
@@ -14199,10 +14304,10 @@
               url = 'https://' + url;
             }
           } else {
-            // It's a search query - use M Search (DuckDuckGo HTML)
+            // It's a search query - use Bing
             isSearch = true;
             const searchQuery = encodeURIComponent(input);
-            url = 'https://html.duckduckgo.com/html/?q=' + searchQuery;
+            url = 'https://www.bing.com/search?q=' + searchQuery;
             
             // Save to search history
             const historyEntry = { query: input, timestamp: Date.now() };
@@ -15054,8 +15159,8 @@
         }
         localStorage.setItem('browserSearchHistory', JSON.stringify(state.browserSearchHistory));
         
-        // Use DuckDuckGo HTML which works in iframes
-        const searchUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+        // Use Bing search
+        const searchUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
         
         // Navigate to search results
         navigateCurrentTab(windowId, searchUrl);
@@ -15070,8 +15175,8 @@
         }
         localStorage.setItem('browserSearchHistory', JSON.stringify(state.browserSearchHistory));
         
-        // Use DuckDuckGo HTML
-        const searchUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+        // Use Bing search
+        const searchUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
         navigateCurrentTab(windowId, searchUrl);
       };
 
@@ -19689,9 +19794,9 @@
         state.customWallpapers.splice(index, 1);
         localStorage.setItem('customWallpapers', JSON.stringify(state.customWallpapers));
         
-        // If deleted wallpaper was active, reset to default
+        // If deleted wallpaper was active, reset to default (Mpaper)
         if (state.activeCustomWallpaper === index) {
-          state.activeCustomWallpaper = -2; // Default to Tahoe
+          state.activeCustomWallpaper = -2; // Default to Mpaper
           localStorage.setItem('activeCustomWallpaper', '-2');
           window.setActiveWallpaper(-2);
         } else if (state.activeCustomWallpaper > index) {
@@ -19709,15 +19814,15 @@
         
         // Built-in wallpapers with external URLs
         const builtInWallpapers = {
-          '-1': { // Ubuntu Quokka
-            light: 'https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,c_fill,w_1920/https%3A%2F%2Fubuntu.com%2Fwp-content%2Fuploads%2F2e6a%2FQuesting_Quokka_Wallpaper_Color_1920x1080.png',
-            dark: 'https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,c_fill,w_1920/https%3A%2F%2Fubuntu.com%2Fwp-content%2Fuploads%2F196b%2FQuesting_Quokka_Wallpaper_Dark_1920x1080.png'
+          '-2': { // Mpaper (default)
+            light: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20white.png',
+            dark: 'https://raw.githubusercontent.com/Matko802/Mos/refs/heads/main/Wallpapers/Mpaper%20dark.png'
           },
-          '-2': { // Tahoe
+          '-3': { // Tahoe
             light: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Light-1080x1920.png',
             dark: 'https://raw.githubusercontent.com/Matko802/my-web-os-things/refs/heads/main/26-Tahoe-Dark-1080x1920.png'
           },
-          '-3': { // macOS Sonoma
+          '-4': { // macOS Sonoma
             light: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-L.jpg',
             dark: 'https://512pixels.net/downloads/macos-wallpapers-thumbs/14-0-Sonoma-D.jpg'
           }
